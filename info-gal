@@ -1,0 +1,40 @@
+-------------------------------------------------------------------------
+GAL - Gerenciador de Arquivos Linux
+
+$ gal [opção] [extensões] [endOrigem] [endDestino]
+$ gal [opção] [lista] [extensões] [endOrigem] [endDestino]
+
+gal -R --copy-list <minha_lista>
+
+-i	: Informações
+-m	: Mover todos os arquivos da lista
+-c	: Copiar todos os arquivos da lista
+-ls	: Exibir lista
+-a	: Adicionar um determinada rota à lista
+-o	: Abrir lista padrão com editor de texto gedit
+--clear : Limpar lista padrão
+--open-list : Abrir um determinada lista com editor de texto gedit
+--clear-list : Limpar uma lista específica
+
+Modo de uso
+$ gal -a jpg endereco/pasta1 endereco/pasta2 -> adicionando rota à lista para extensão jpg
+$ gal -a jpg gif ico endereco/pasta1 endereco/pasta2 -> adicionando rota à lista com 3 extensões
+$ gal -m
+$ gal -m jpg -> move apenas arquivos com extensão jpg nas rotas salvas na lista
+$ gal -o   -> abri a lista padrão com o editor gedit
+$ gal --clear
+$ gal -ls -> exibe toda a lista de rotas
+$ gal -ls jpg -> exibe apenas as rotas de extensão jpg
+$ gal --create-list minhaLista -> cria uma lista nomeada como minhaLista
+$ gal --remove-list minhaLista -> apaga a lista minhaLista
+$ gal --view-list minhaLista -> exibe conteudo da lista minhaLista
+$ gal --clear-list minhaLista -> limpa a lista minhaLista
+$ gal --add-list minhaLista jpg ~/Download/ ~/imagens/ -> define uma rota do diretório Download para
+Imagens de extensão jpg na lista minhaLista
+$ gal --move-list minhaLista -> executa a mudanças definidas nas rotas contidas em minhaLista
+$ gal --copy-list minhaLista -> realiza a cópia dos arquivos definidos nas rotas da lista minhaLista
+$ gal --move-list minhaLista pdf -> executa a mudanças definidas nas rotas contidas em minhaLista com extensão pdf
+$ gal -R --copy std -> realiza cópia recursiva dos arquivos listados nas rotas padrão
+$ gal -R --copy-list minhaLista -> realiza cópia recursiva dos arquivos das rotas da lista teste
+
+-------------------------------------------------------------------------

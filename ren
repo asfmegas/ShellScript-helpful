@@ -1,0 +1,27 @@
+#!/bin/bash
+# Descrição: ren - ùtil para renomear vários arquivos de um só vez.
+# Sinopse: ren [opções]
+# Ajuda: $ ren -i
+# Autor: Alexsandro Façanha <asfsteel2012@gmail.com> <asfmegas.github.io>
+# Versão: 1.0.2
+# Licença: Licence GPL
+
+
+source ren.ext
+
+while getopts iwmsl OPCAO; do
+	case "${OPCAO}" in
+		i)
+			cat $HOME/mybin/ren.ext | grep "##" ;;
+		w)
+			getDados "WebM" "webm" "tmp_lista.txt" ;;
+		m)
+			getDados "MPEG" "mp4" "tmp_lista.txt" ;;
+		s)
+			rename 'y/ /_/' * ;;
+		l)
+			getLista "MPEG" "WebM" ;;
+		*)
+			echo "Opção inválida!" ;;
+	esac
+done

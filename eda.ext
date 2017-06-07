@@ -1,0 +1,193 @@
+# Função informativa
+commandNotFound() {
+	echo "Comando não encontrado!"
+}
+
+# Criar arquivo encfs-log.txt se ele não existir
+createList() {
+	if [ -f $1 ]; then
+		echo -e "\033[1;33;40m\n A lista já foi criada!\n"
+	else
+		touch $1
+		echo -e "\033[1;32;40m\n Lista criada com sucesso!\n"
+	fi
+}
+
+verificarArquivo() {
+	if [ -f $1 ]; then
+		cat $1 | less
+	else
+		echo -e "\n\033[1;31;40m$2\n"
+	fi
+}
+
+getAcesso() { 
+	passwd="6173666d6567617331380a"
+
+	printf "Digite a senha: "
+	read -s senha
+	if [ "$passwd" == $(echo $senha | xxd -p) ]; then
+		if [ $# -eq 1 ]; then
+			if [ -f $1 ]; then
+				clear
+				echo "Lista:"
+				cat $1 | grep ":h" | cat -n | cut -d':' -f1
+			else
+				echo "A rota não foi criada!"
+			fi
+		elif [ $# -eq 2 ]; then 
+			if [ -f $1 ]; then
+				clear
+				echo "Lista:"
+				rota=$(cat $1 | grep $2)
+				endEnc=$(echo "$rota" | cut -d':' -f2)
+				endDes=$(echo "$rota" | cut -d':' -f3)
+				echo "$2: ($endEnc) -->> ($endDes)"
+
+			else
+				echo "A rota não foi criada!"
+			fi
+		fi
+	else
+		echo "Senha inválida"
+	fi
+}
+
+getLists() {
+	if [ $# -eq 2 ]; then
+		if [ -f $1 ]; then
+			cat $1 | grep -v ":h" | cat -n | cut -d':' -f1
+		else
+			echo -e $2
+		fi
+	elif [ $# -eq 3 ]; then
+		if [ -f $1 ]; then
+			if [ $3 = "-h" ]; then
+				getAcesso $1
+			else
+				rotas=$(cat $1)
+				for linha in $rotas ; do
+					rota=$(echo $linha | grep "$3" | cut -d':' -f1)
+					if [ $rota == $3 &> /dev/null ]; then
+						endEnc=$(echo $linha | grep "$rota" | cut -d':' -f2)
+						endDes=$(echo $linha | grep "$rota" | cut -d':' -f3)
+						echo "$rota: ($endEnc) -->> ($endDes)"
+					fi
+				done
+			fi
+		else
+			echo "A rota não foi criada!"
+		fi
+	elif [ $# -eq 4 ]; then
+		getAcesso $1 $4
+	fi
+}
+
+desmontar() {
+	if [ -f $1 ]; then
+		rota=$(cat $1 | grep ^"$2" | uniq)
+		if [ $rota ]; then
+			count=$(df | grep `echo $rota | cut -d':' -f3 | sed 's/\/$//'` | wc -l)
+
+			if [ $count -eq 1 ]; then
+				for item in $rota ; do
+					endMontado=$(echo $item | cut -d':' -f3)
+					local count=$(ls $endMontado | wc -l)
+					if [ $count -eq 0 ]; then
+						if [ $3 == "-y" 2>/dev/null ]; then
+							fusermount -u $endMontado
+							exit 0
+						fi	
+						echo "Verifique se o diretório está montado"
+						echo "Digite $ eda -u $2 -y para forçar"
+					else
+						fusermount -u $endMontado
+						exit 0
+					fi
+				done
+			else
+				echo -e "\n \033[0;33mEstá pasta não está montada!\n"
+			fi
+		else
+			echo -e "\033[0;33mA rota \033[1;31m $2 \033[0;33m não existe."
+		fi
+	else
+		echo "rota não foi criada!"
+	fi
+}
+
+montar() {
+	if [ -f $1 ]; then
+		rota=$(cat $1 | grep ^"$2" | uniq)
+		if [ $rota ]; then
+			vr=$(echo $rota | cut -d':' -f1)
+			count=$(df | grep `echo $rota | cut -d':' -f3 | sed 's/\/$//'` | wc -l)
+
+			if [ $count -eq 0 ]; then
+				if [ $vr == $2 &>/dev/null ]; then
+					for item in $rota ; do
+						if [ $nomeRota == $3 &> /dev/null ]; then
+							endEncripado=$(echo $item | cut -d':' -f2)
+							endMontado=$(echo $item | cut -d':' -f3)
+							encfs $endEncripado $endMontado
+						fi
+					done
+				else
+					echo "Não existe!"
+				fi
+			else
+				echo -e "\n \033[0;33mA pasta \033[1;31m $2 \033[0;33m já está montada.\n"
+			fi
+		else
+			echo -e "\n \033[0;33mA rota \033[1;31m $2 \033[0;33m não existe.\n"
+		fi
+	else
+		echo "A rota não foi criada!"
+	fi
+}
+
+adicionar() {
+	if [ -f $1 ]; then
+		count=$(cat $1 | grep $3 | uniq | wc -l)
+		
+		if [ $count -eq 0 ]; then
+			if [ $6 ]; then
+				if [ $(echo $6) == '-h' ]; then
+					echo "Comando errado!"
+					exit 1
+				fi
+			fi
+			if [ $3 = "-h" ]; then 
+				if [ -d $5 ] || [ -d $6 ]; then
+					echo "$4:$5:$6:h" >> $1
+				else
+					echo "Verifique os caminhos."
+					exit 1
+				fi
+			else
+				echo "$3:$4:$5" >> $1
+			fi
+		else
+			echo "A rota $3 já existe!"
+		fi
+	else
+		echo "O arquivo não existe!"
+	fi
+}
+
+remover() {
+	if [ $2 ]; then
+		rotas=$(cat $1)
+		rm $1
+		for rota in $rotas; do
+			nomeLista=$(echo $rota | cut -d':' -f1 )
+			if [ $2 != $nomeLista ]; then
+				echo $rota >> $1
+			fi
+		done
+	else
+		echo "Digite a lista a ser removida."
+	fi
+}
+
+

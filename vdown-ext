@@ -1,0 +1,8 @@
+validarCaminho() {
+	if [ $1 $2 ]; then
+		echo "ok" &>/dev/null
+	else
+		echo -e "\n \033[1;31m$3\033[00m\n"
+		exit 1
+	fi
+}

@@ -1,0 +1,774 @@
+#!/bin/bash
+# Gereciador de Arquivos Linux - GAL
+# Simples gerenciador de arquivos
+
+
+########################################################################
+# Verifica se a lista padrão existe. Caso não exista, é criada uma.
+########################################################################
+if [ -d $HOME/.gal ]; then
+	if [ -f $HOME/.gal/.lista.txt ] ; then
+		lista=$(cat $HOME/.gal/.lista.txt)
+	else
+		touch $HOME/.gal/.lista.txt
+		lista=$(cat $HOME/.gal/.lista.txt)
+	fi
+else
+	echo -e "\n Para iniciar digite o comando:\n$ gal --create\n"
+	exit 1
+fi
+
+########################################################################
+# Para 1 entrada
+########################################################################
+if [ $# -eq 1 ] ; then
+	case $1 in
+		# $ gal -i -> informações do comando
+		-i | --info)
+			if [ -f $HOME/mybin/info-gal ]; then
+				cat $HOME/mybin/info-gal | less
+			else
+				echo "Não foi encontrado o arquivo info-gal" 
+			fi ;;
+		# $ gal -o -> abrir lista principal
+		-o | --open)
+			gedit $HOME/.gal/.lista.txt ;;
+		# $ gal --create -> cria a pasta de armazenagem dos arquivos gal
+		--create)
+			if [ -d $HOME/.gal ]; then
+				echo "O arquivo .gal já foi criado."
+			else
+				mkdir $HOME/.gal
+			fi ;;
+		########################################################################
+		# Mover todos os arquivos definido na lista padrão 
+		########################################################################
+		# $ gal -m -> mover todos os arquivos da rota padrão
+		-m | --move)
+			for end in $lista; do				
+				enderecoOrigem=$(echo $end | cut -d'#' -f1)
+				enderecoDestino=$(echo $end | cut -d'#' -f2)
+				extensao=$(echo $end | cut -d'#' -f3)
+				arq=$(echo "$enderecoOrigem*.$extensao")
+				if ls $arq &> /dev/null ; then
+					mv -u $arq $enderecoDestino &> /dev/null
+					echo -e "Movido com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+				else
+					echo -e "Não existe arquivos:\n .($extensao) em $enderecoOrigem"
+				fi
+			done
+			echo "."; sleep 1;echo "."; sleep 1;echo "."; sleep 1
+			echo -e "\nProcesso finalizado!";;
+		########################################################################
+		# Copiar todos os arquivos definido na lista padrão 
+		########################################################################
+		# $ gal -c -> copiar todos os arquivos da rota padrão
+		-c | --copy)
+			for end in $lista; do				
+				enderecoOrigem=$(echo $end | cut -d'#' -f1)
+				enderecoDestino=$(echo $end | cut -d'#' -f2)
+				extensao=$(echo $end | cut -d'#' -f3)
+				arq=$(echo "$enderecoOrigem"*.$extensao)
+				if ls $arq &> /dev/null ; then
+					cp -u $arq $enderecoDestino &> /dev/null
+				else
+					echo "Não existe arquivos: .($extensao) em $enderecoOrigem"
+				fi
+			done
+			echo -e "\nProcesso finalizado!";;
+		########################################################################
+		# Limpar lista padrão
+		########################################################################
+		# $ gal --clear -> limpar rota padrão
+		--clear)
+			rm $HOME/.gal/.lista.txt
+			touch $HOME/.gal/.lista.txt;;
+		########################################################################
+		# Exibir lista padrão
+		########################################################################
+		# $ gal -ls -> listar as rotas da lista padrão
+		-ls)
+			for item in $lista; do
+				endOrigem=$(echo $item | cut -d'#' -f1)
+				endDestino=$(echo $item | cut -d'#' -f2)
+				ext=$(echo $item | cut -d'#' -f3)
+				echo "$endOrigem --> $endDestino .($ext)"
+			done;;
+		########################################################################
+		# Exibir listas criadas pelo usuário
+		########################################################################
+		# $ gal --lists -> listar todas as listas de rotas
+		--lists)
+			ls $HOME/.gal | cut -d'.' -f1 | cut -d'_' -f2 | cat -n | uniq;;
+		*)
+			echo "Comando não encontrado!";;
+	esac
+########################################################################
+# Para 2 entradas
+########################################################################	
+elif [ $# -eq 2 ] ; then
+	case $1 in
+		########################################################################
+		# Mover os arquivos definidos na lista padrão de extensão definina na entrada
+		########################################################################
+		# $ gal -m pdf -> move os arquivos da lista padrão das rotas de extensão pdf
+		-m | --move)
+			for end in $lista; do				
+				enderecoOrigem=$(echo $end | cut -d'#' -f1)
+				enderecoDestino=$(echo $end | cut -d'#' -f2)
+				extensao=$(echo $end | cut -d'#' -f3)
+				if [ $extensao == $2 ] ; then
+					arq=$(echo "$enderecoOrigem*.$extensao")
+					if ls $arq &> /dev/null ; then
+						mv -u $arq $enderecoDestino &> /dev/null
+						echo -e "Movido com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+					else
+						echo -e "Não existe arquivos:\n .($extensao) em $enderecoOrigem"
+					fi
+				fi
+			done
+			echo -e "\nProcesso finalizado!";;
+		########################################################################
+		# Copiar os arquivos de extensão definida da lista padrão
+		########################################################################
+		# $ gal -c pdf -> copia os arquivos da lista padrão de extansão pdf
+		-c | --copy)
+			for end in $lista; do				
+				enderecoOrigem=$(echo $end | cut -d'#' -f1)
+				enderecoDestino=$(echo $end | cut -d'#' -f2)
+				extensao=$(echo $end | cut -d'#' -f3)
+				if [ $extensao == $2 ] ; then
+					arq=$(echo "$enderecoOrigem*.$extensao")
+					if ls $arq &> /dev/null ; then
+						cp -u $arq $enderecoDestino &> /dev/null
+						echo -e "Copiado com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+					else
+						echo "Não existe arquivos: .($extensao) em $enderecoOrigem"
+					fi
+				fi
+			done
+			echo -e "\nProcesso finalizado!";;
+		########################################################################
+		# Exibir conteúdo da lista padão
+		########################################################################
+		# $ gal -ls -> exibe as rotas da lista padrão
+		-ls)
+			for item in $lista; do
+				endOrigem=$(echo $item | cut -d'#' -f1)
+				endDestino=$(echo $item | cut -d'#' -f2)
+				ext=$(echo $item | cut -d'#' -f3)
+				echo "$endOrigem --> $endDestino .($ext)" | grep $2
+			done;;
+		########################################################################
+		# Exibir conteúdo de uma lista criada pelo usuário
+		########################################################################
+		# $ gal --view-list teste -> exibe todas as rotas da lista teste
+		--view-list)
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				myList=$(cat $HOME/.gal/lista_$2.txt)
+				for item in $myList; do
+					endOrigem=$(echo $item | cut -d'#' -f1)
+					endDestino=$(echo $item | cut -d'#' -f2)
+					ext=$(echo $item | cut -d'#' -f3)
+					echo "$endOrigem --> $endDestino .($ext)"
+				done
+			else
+				echo "Lista não existe!"
+			fi;;
+		########################################################################
+		# Mover os arquivos de uma lista criada pelo usuário
+		########################################################################
+		# $ gal --move-list teste -> move arquivos da lista definida(teste)
+		--move-list)
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				myList=$(cat $HOME/.gal/lista_$2.txt)
+				for end in $myList; do				
+					enderecoOrigem=$(echo $end | cut -d'#' -f1)
+					enderecoDestino=$(echo $end | cut -d'#' -f2)
+					if [ -d $enderecoOrigem ] && [ -d $enderecoDestino ] ; then
+						extensao=$(echo $end | cut -d'#' -f3)
+						arq=$(echo "$enderecoOrigem*.$extensao")
+						if ls $arq &> /dev/null ; then
+							mv -u $arq $enderecoDestino &> /dev/null
+							echo -e "Movido com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+						else
+							echo "Não existe arquivos: .($extensao) em $enderecoOrigem"
+						fi
+					else
+						echo -e "A rota abaixo não foi encontrada:\n$enderecoOrigem -> $enderecoDestino"
+					fi
+				done
+				echo -e "\nProcesso finalizado!"
+			else
+				echo "A lista $2 não foi encontrada!"
+			fi;;
+		########################################################################
+		# Copiar os arquivos de uma lista criada pelo usuário
+		########################################################################
+		# $ gal --copy-list teste -> copia arquivos da lista definida
+		--copy-list)
+			if [ -f $HOME/.gal/lista_$2.txt ]; then
+				myList=$(cat $HOME/.gal/lista_$2.txt)
+				for end in $myList; do				
+					enderecoOrigem=$(echo $end | cut -d'#' -f1)
+					enderecoDestino=$(echo $end | cut -d'#' -f2)
+					if [ -d $enderecoOrigem ] && [ -d $enderecoDestino ] ; then
+						extensao=$(echo $end | cut -d'#' -f3)
+						arq=$(echo "$enderecoOrigem*.$extensao")
+						if ls $arq &> /dev/null ; then
+							cp -u $arq $enderecoDestino &> /dev/null
+							echo -e "Copiado com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+						else
+							echo "Não existe arquivos: .($extensao) em $enderecoOrigem"
+						fi
+					else
+						echo -e "A rota abaixo não foi encontrada:\n$enderecoOrigem -> $enderecoDestino"
+					fi
+				done
+			else
+				echo "A lista $2 não existe!"
+			fi
+			echo -e "\nProcesso finalizado!";;
+		########################################################################
+		# Criar uma lista
+		########################################################################
+		# $ gal --create-list teste -> cria uma lista chamada teste
+		--create-list)
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				echo "A lista $2 já existe!"
+			else
+				touch $HOME/.gal/lista_$2.txt
+				echo "Lista $2 criada com sucesso!"
+			fi;;
+		########################################################################
+		# Limpar uma determinada lista
+		########################################################################
+		# $ gal --clear-list teste -> limpa a lista teste
+		--clear-list)
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				rm $HOME/.gal/lista_$2.txt
+				touch $HOME/.gal/lista_$2.txt
+			else
+				echo "A lista $2 não existe!"
+			fi;;
+		########################################################################
+		# Remover uma lista
+		########################################################################
+		# $ gal --remove-list teste -> remove a lista teste
+		--remove-list)
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				rm $HOME/.gal/lista_$2.txt
+				echo "A lista $2 foi apagada com sucesso!"
+			else
+				echo "A lista $2 não existe!"
+			fi;;
+		########################################################################
+		# Abrir lista definida
+		########################################################################
+		# $ gal --open-list teste -> abre a lista teste com editor de texto gedit
+		--open-list)
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				gedit $HOME/.gal/lista_$2.txt&
+			else
+				echo "A lista $2 não existe!"
+			fi;;
+		*)
+			echo "Comando não encontrado!";;
+	esac
+########################################################################
+# Para 3 entradas
+########################################################################
+elif [ $# -eq 3 ] ; then
+	case $1 in
+		########################################################################
+		# Mover os arquivos de uma lista criada pelo usuário de extensão definida
+		########################################################################
+		# $ gal --move-list teste pdf -> move apenas os arquivos pdf da lista teste
+		--move-list)
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				myList=$(cat $HOME/.gal/lista_$2.txt)
+				for end in $myList; do	
+					enderecoOrigem=$(echo $end | cut -d'#' -f1)
+					enderecoDestino=$(echo $end | cut -d'#' -f2)
+					if [ -d $enderecoOrigem ] && [ -d $enderecoDestino ] ; then
+					extensao=$(echo $end | cut -d'#' -f3)
+						if [ $extensao == $3 ] ; then
+							arq=$(echo "$enderecoOrigem*.$extensao")
+							if ls $arq &> /dev/null ; then
+								mv -u $arq $enderecoDestino &> /dev/null
+								echo -e "Movido com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+							else
+								echo $arq
+								echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+							fi
+						fi
+					else
+						echo -e "A rota abaixo não foi encontrada:\n$enderecoOrigem --> $enderecoDestino"
+					fi
+				done
+				echo -e "\nProcesso finalizado!"
+			else
+				echo "A lista $2 não existe!"
+			fi;;
+		########################################################################
+		# Copiar os arquivos de uma lista criada pelo usuário de extensão definida
+		########################################################################
+		# $ gal --copy-list teste jpg -> copia apenas os arquivos jpg da lista teste
+		--copy-list)
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				myList=$(cat $HOME/.gal/lista_$2.txt)
+				for end in $myList; do	
+					enderecoOrigem=$(echo $end | cut -d'#' -f1)
+					enderecoDestino=$(echo $end | cut -d'#' -f2)
+					if [ -d $enderecoOrigem ] && [ -d $enderecoDestino ] ; then
+						extensao=$(echo $end | cut -d'#' -f3)
+						if [ $extensao == $3 ] ; then
+							arq=$(echo "$enderecoOrigem*.$extensao")
+							if ls $arq &> /dev/null ; then
+								cp -u $arq $enderecoDestino &> /dev/null
+								echo -e "Copiado com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+							else
+								echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+							fi
+						fi
+					else
+						echo -e "A rota abaixo não foi encontrada:\n$enderecoOrigem --> $enderecoDestino"
+					fi
+				done
+				echo -e "\nProcesso finalizado!"
+			else
+				echo "A lista $2 não existe!"
+			fi;;
+		########################################################################
+		# Exibir rotas de extensão definida de uma lista criada pelo usuário
+		########################################################################
+		# $ gal --view-list teste -> exibe o conteúdo da lista teste
+		--view-list)
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				myList=$(cat $HOME/.gal/lista_$2.txt)
+				for item in $myList; do
+					endOrigem=$(echo $item | cut -d'#' -f1)
+					endDestino=$(echo $item | cut -d'#' -f2)
+					ext=$(echo $item | cut -d'#' -f3)
+					echo "$endOrigem --> $endDestino .($ext)" | grep $3
+				done
+			else
+				echo "A lista $2 não existe!"
+			fi;;
+		########################################################################
+		# Possibilita mover até duas extensões distintas da lista padrão
+		########################################################################
+		-m | --move)
+			for end in $lista; do				
+				enderecoOrigem=$(echo $end | cut -d'#' -f1)
+				enderecoDestino=$(echo $end | cut -d'#' -f2)
+				extensao=$(echo $end | cut -d'#' -f3)
+				if [ $extensao == $2 ] ; then
+					arq=$(echo "$enderecoOrigem*.$extensao")
+					if ls $arq &> /dev/null ; then
+						mv -u $arq $enderecoDestino &> /dev/null
+						echo -e "Movido com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+					else
+						echo $arq
+						echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+					fi
+				fi
+				if [ $extensao == $3 ] ; then
+					arq=$(echo "$enderecoOrigem*.$extensao")
+					if ls $arq &> /dev/null ; then
+						mv -u $arq $enderecoDestino &> /dev/null
+						echo -e "Movido com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+					else
+						echo $arq
+						echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+					fi
+				fi
+			done
+			echo -e "\nProcesso finalizado!";;
+		########################################################################
+		# Cópia recursiva para uma lista criada pelo usuário
+		########################################################################
+		# $ gal -R --copy-list teste -> realiza cópia recursiva de todos os arquivos na lista teste
+		-R)
+			case $2 in
+				--copy-list)
+					if [ -f $HOME/.gal/lista_$3.txt ] ; then
+						myList=$(cat $HOME/.gal/lista_$3.txt)
+						for end in $myList; do	
+							enderecoOrigem=$(echo $end | cut -d'#' -f1)
+							enderecoDestino=$(echo $end | cut -d'#' -f2)
+							if [ -d $enderecoOrigem ] && [ -d $enderecoDestino ] ; then
+								arq=$(echo "$enderecoOrigem*")
+								if ls $arq &> /dev/null ; then
+									cp -Ru $arq $enderecoDestino &> /dev/null
+									echo -e "Copiado recursivamente com sucesso!:\n $enderecoOrigem -> $enderecoDestino"
+								fi
+							else
+								echo -e "A rota abaixo não foi encontrada:\n$enderecoOrigem -> $enderecoDestino"
+							fi
+						done
+						echo -e "\nProcesso finalizado!"
+					else
+						echo "A lista $3 não existe!"
+					fi;;
+				########################################################################
+				# Cópia recursiva para lista padrão
+				########################################################################
+				# $ gal -R --copy-list teste -> realiza cópia recursiva de todos os arquivos na lista padrão
+				--copy)
+						if [ $3 == "std" ] ; then
+							for end in $lista; do	
+								enderecoOrigem=$(echo $end | cut -d'#' -f1)
+								enderecoDestino=$(echo $end | cut -d'#' -f2)
+								if [ -d $enderecoOrigem ] && [ -d $enderecoDestino ] ; then
+									arq=$(echo "$enderecoOrigem*")
+									if ls $arq &> /dev/null ; then
+										cp -Ru $arq $enderecoDestino &> /dev/null
+										echo -e "Copiado recursivamente com sucesso!:\n $enderecoOrigem -> $enderecoDestino"
+									fi
+								else
+									echo -e "A rota abaixo não foi encontrada:\n$enderecoOrigem -> $enderecoDestino"
+								fi
+							done
+							echo -e "\nProcesso finalizado!"
+						else
+							echo "A lista $3 não foi encontrada!"
+						fi;;
+				*)
+					echo "Comando não encontrado!";;
+			esac;;
+		*)
+			echo "Comando não encontrado!";;        
+	esac
+########################################################################
+# Para 4 entradas
+########################################################################
+elif [ $# -eq 4 ] ; then
+	case $1 in
+		########################################################################
+		# Adicionar rota a lista padrão
+		########################################################################
+		# $ gal -a [tipo] [origem] [destino] - adicionar rota a lista padrão
+		-a | --add)
+			if [ -d $3 ] && [ -d $4 ] ; then
+				echo $3#$4#$2 >> $HOME/.gal/.lista.txt
+			else
+				echo "Verifique os caminhos!"
+			fi;;
+		########################################################################
+		# Possibilita mover até três extensões distintas da lista padrão
+		########################################################################
+		-m | --move)
+			for end in $lista; do				
+				enderecoOrigem=$(echo $end | cut -d'#' -f1)
+				enderecoDestino=$(echo $end | cut -d'#' -f2)
+				extensao=$(echo $end | cut -d'#' -f3)
+				if [ $extensao == $2 ] ; then
+					arq=$(echo "$enderecoOrigem*.$extensao")
+					if ls $arq &> /dev/null ; then
+						mv -u $arq $enderecoDestino &> /dev/null
+						echo -e "Movido com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+					else
+						echo $arq
+						echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+					fi
+				fi
+				if [ $extensao == $3 ] ; then
+					arq=$(echo "$enderecoOrigem*.$extensao")
+					if ls $arq &> /dev/null ; then
+						mv -u $arq $enderecoDestino &> /dev/null
+						echo -e "Movido com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+					else
+						echo $arq
+						echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+					fi
+				fi
+				if [ $extensao == $4 ] ; then
+					arq=$(echo "$enderecoOrigem*.$extensao")
+					if ls $arq &> /dev/null ; then
+						mv -u $arq $enderecoDestino &> /dev/null
+						echo -e "Movido com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+					else
+						echo $arq
+						echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+					fi
+				fi
+			done
+			echo -e "\nProcesso finalizado!";;
+		########################################################################
+		# Possibilita mover até duas extensões distintas
+		########################################################################
+		--move-list)
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				myList=$(cat $HOME/.gal/lista_$2.txt)
+				for end in $myList; do	
+					enderecoOrigem=$(echo $end | cut -d'#' -f1)
+					enderecoDestino=$(echo $end | cut -d'#' -f2)
+					if [ -d $enderecoOrigem ] && [ -d $enderecoDestino ] ; then
+					extensao=$(echo $end | cut -d'#' -f3)
+						if [ $extensao == $3 ] ; then
+							arq=$(echo "$enderecoOrigem*.$extensao")
+							if ls $arq &> /dev/null ; then
+								mv -u $arq $enderecoDestino &> /dev/null
+								echo -e "Movido com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+							else
+								echo $arq
+								echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+							fi
+						fi
+						if [ $extensao == $4 ] ; then
+							arq=$(echo "$enderecoOrigem*.$extensao")
+							if ls $arq &> /dev/null ; then
+								mv -u $arq $enderecoDestino &> /dev/null
+								echo -e "Movido com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+							else
+								echo $arq
+								echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+							fi
+						fi
+					else
+						echo -e "A rota abaixo não foi encontrada:\n$enderecoOrigem --> $enderecoDestino"
+					fi
+				done
+				echo -e "\nProcesso finalizado!"
+			else
+				echo "A lista $2 não existe!"
+			fi;;
+		########################################################################
+		# Possibilita copiar até duas extenões distintas
+		########################################################################
+		--copy-list)
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				myList=$(cat $HOME/.gal/lista_$2.txt)
+				for end in $myList; do	
+					enderecoOrigem=$(echo $end | cut -d'#' -f1)
+					enderecoDestino=$(echo $end | cut -d'#' -f2)
+					if [ -d $enderecoOrigem ] && [ -d $enderecoDestino ] ; then
+						extensao=$(echo $end | cut -d'#' -f3)
+						if [ $extensao == $3 ] ; then
+							arq=$(echo "$enderecoOrigem*.$extensao")
+							if ls $arq &> /dev/null ; then
+								cp -u $arq $enderecoDestino &> /dev/null
+								echo -e "Copiado com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+							else
+								echo $arq
+								echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+							fi
+						fi
+						if [ $extensao == $4 ] ; then
+							arq=$(echo "$enderecoOrigem*.$extensao")
+							if ls $arq &> /dev/null ; then
+								cp -u $arq $enderecoDestino &> /dev/null
+								echo -e "Copiado com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+							else
+								echo $arq
+								echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+							fi
+						fi
+					else
+						echo -e "A rota abaixo não foi encontrada:\n$enderecoOrigem --> $enderecoDestino"
+					fi
+				done
+				echo -e "\nProcesso finalizado!"
+			else
+				echo "A lista $2 não existe!"
+			fi;;
+		*)
+			echo "Opção não encontrada!" ;;
+	esac
+########################################################################
+# Para 5 entradas 
+########################################################################
+elif [ $# -eq 5 ] ; then
+	case $1 in
+		########################################################################
+		# Adicionar uma rota com duas extensões na lista padrão
+		########################################################################
+		-a | --add)
+			if [ -d $4 ] && [ -d $5 ] ; then
+				echo $4#$5#$2 >> $HOME/.gal/.lista.txt
+				echo $4#$5#$3 >> $HOME/.gal/.lista.txt
+			else
+				echo "Verifique os caminhos!"
+			fi;;
+		########################################################################
+		# Adicionar uma rota em uma lista criada pelo usuário
+		########################################################################
+		# $ gal --add-list [nome_lista] [tipo] [origem] [destino] - adicionar rota em uma lista
+		--add-list)
+			# gal --add-list test jpg caminhoOrigem camanhoDestino
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				if [ -d $4 &> /dev/null ] && [ -d $5 &> /dev/null ] ; then
+					#echo "$4 -> $5 ($3)"
+					echo $4#$5#$3 >> $HOME/.gal/lista_$2.txt
+				else
+					echo -e "Cheque os endereços definidos.\n$4\n$5"
+				fi
+			else
+				echo "Lista $2 não existe!"
+				exit 1
+			fi;;
+		########################################################################
+		# Possibilita usar três extensões para cópia de arquivos
+		########################################################################
+		--copy-list)
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				myList=$(cat $HOME/.gal/lista_$2.txt)
+				for end in $myList; do	
+					enderecoOrigem=$(echo $end | cut -d'#' -f1)
+					enderecoDestino=$(echo $end | cut -d'#' -f2)
+					if [ -d $enderecoOrigem ] && [ -d $enderecoDestino ] ; then
+						extensao=$(echo $end | cut -d'#' -f3)
+						if [ $extensao == $3 ] ; then
+							arq=$(echo "$enderecoOrigem*.$extensao")
+							if ls $arq &> /dev/null ; then
+								cp -u $arq $enderecoDestino &> /dev/null
+								echo -e "Copiado com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+							else
+								echo $arq
+								echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+							fi
+						fi
+						if [ $extensao == $4 ] ; then
+							arq=$(echo "$enderecoOrigem*.$extensao")
+							if ls $arq &> /dev/null ; then
+								cp -u $arq $enderecoDestino &> /dev/null
+								echo -e "Copiado com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+							else
+								echo $arq
+								echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+							fi
+						fi
+						if [ $extensao == $5 ] ; then
+							arq=$(echo "$enderecoOrigem*.$extensao")
+							if ls $arq &> /dev/null ; then
+								cp -u $arq $enderecoDestino &> /dev/null
+								echo -e "Copiado com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+							else
+								echo $arq
+								echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+							fi
+						fi
+					else
+						echo -e "A rota abaixo não foi encontrada:\n$enderecoOrigem --> $enderecoDestino"
+					fi
+				done
+				echo -e "\nProcesso finalizado!"
+			else
+				echo "A lista $2 não existe!"
+			fi;;
+		########################################################################
+		# Possibilita mover até três tipos de extensões distintas
+		########################################################################
+		--move-list)
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				myList=$(cat $HOME/.gal/lista_$2.txt)
+				for end in $myList; do	
+					enderecoOrigem=$(echo $end | cut -d'#' -f1)
+					enderecoDestino=$(echo $end | cut -d'#' -f2)
+					if [ -d $enderecoOrigem ] && [ -d $enderecoDestino ] ; then
+					extensao=$(echo $end | cut -d'#' -f3)
+						if [ $extensao == $3 ] ; then
+							arq=$(echo "$enderecoOrigem*.$extensao")
+							if ls $arq &> /dev/null ; then
+								mv -u $arq $enderecoDestino &> /dev/null
+								echo -e "Movido com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+							else
+								echo $arq
+								echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+							fi
+						fi
+						if [ $extensao == $4 ] ; then
+							arq=$(echo "$enderecoOrigem*.$extensao")
+							if ls $arq &> /dev/null ; then
+								mv -u $arq $enderecoDestino &> /dev/null
+								echo -e "Movido com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+							else
+								echo $arq
+								echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+							fi
+						fi
+						if [ $extensao == $5 ] ; then
+							arq=$(echo "$enderecoOrigem*.$extensao")
+							if ls $arq &> /dev/null ; then
+								mv -u $arq $enderecoDestino &> /dev/null
+								echo -e "Movido com sucesso!:\n .($extensao) em $enderecoOrigem -> $enderecoDestino"
+							else
+								echo $arq
+								echo "Não existe arquivos: .($extensao) em $enderecoOrigem"	
+							fi
+						fi
+					else
+						echo -e "A rota abaixo não foi encontrada:\n$enderecoOrigem --> $enderecoDestino"
+					fi
+				done
+				echo -e "\nProcesso finalizado!"
+			else
+				echo "A lista $2 não existe!"
+			fi;;
+		*)
+			echo "Opção não encontrada!" ;;
+	esac
+########################################################################
+# Para 6 entradas
+########################################################################
+elif [ $# -eq 6 ] ; then
+	case $1 in
+		########################################################################
+		# Adicionar uma rota com três extensões na lista padrão
+		########################################################################
+		-a | --add)
+			if [ -d $5 ] && [ -d $6 ] ; then
+				echo $5#$6#$2 >> $HOME/.gal/.lista.txt
+				echo $5#$6#$3 >> $HOME/.gal/.lista.txt
+				echo $5#$6#$4 >> $HOME/.gal/.lista.txt
+			else
+				echo "Verifique os caminhos!"
+			fi;;
+		########################################################################
+		# Adicionar ua rota com duas extensões em uma lista criada pelo usuário
+		########################################################################
+		--add-list)
+			if [ -f $HOME/.gal/lista_$2.txt ] ; then
+				if [ -d $5 ] && [ -d $6 ] ; then
+					echo "$5 -> $6 ($3)"
+					echo $5#$6#$3 >> $HOME/.gal/lista_$2.txt
+					echo "$5 -> $6 ($4)"
+					echo $5#$6#$4 >> $HOME/.gal/lista_$2.txt
+				else
+					echo -e "Cheque os endereços definidos.\n$5\n$6"
+				fi
+			else
+				echo "Lista $2 não existe!"
+				exit 1
+			fi;;
+		*)
+			echo "Opção não encontrada!" ;;
+	esac
+########################################################################
+# Para 7 entradas
+########################################################################
+elif [ $# -eq 7 ] ; then
+	case $1 in
+		--add-list)
+				if [ -f $HOME/.gal/lista_$2.txt ] ; then
+					if [ -d $6 ] && [ -d $7 ] ; then
+						echo "$6 -> $7 ($3)"
+						echo $6#$7#$3 >> $HOME/.gal/lista_$2.txt
+						echo "$6 -> $7 ($4)"
+						echo $6#$7#$4 >> $HOME/.gal/lista_$2.txt
+						echo "$6 -> $7 ($5)"
+						echo $6#$7#$5 >> $HOME/.gal/lista_$2.txt
+					else
+						echo -e "Cheque os endereços definidos.\n$6\n$7"
+					fi
+				else
+					echo "Lista $2 não existe!"
+					exit 1
+				fi;;
+			*)
+				echo "Opção não encontrada!" ;;
+	esac
+else
+	echo "Comando não encontrado!"
+fi

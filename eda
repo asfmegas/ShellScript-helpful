@@ -1,0 +1,40 @@
+#!/bin/bash
+# Descrição: ead - Encripta e desencripta arquivos
+# Sinopse: ead [opções]
+# Ajuda: $ eda -i
+# Autor: Alexsandro Façanha <asfsteel2012@gmail.com> <asfmegas.github.io>
+# Versão: 1.0.1
+# Licença: Licence GPL
+# Dependencia: encfs ~1.7.4
+
+#Importes
+source eda.ext
+declare -r _INFOR_LOG="$HOME/.encfs-log.txt"
+
+# Verifica se o programa encfs está instalado - teste 2
+if which encfs &> /dev/null; then 
+	if [ $# -le 5 ]; then
+		case $1 in
+			-h | --help)
+				verificarArquivo $HOME/mybin/info-eda " Informações indisponíveis.\n Verifique a documentação na pasta: ~/mybin/info-eda" ;;
+			-c | --create)
+				createList $_INFOR_LOG ;;
+			-l | --list)
+				getLists $_INFOR_LOG "A rota não foi criada!" $2 $3 ;;
+			-u | --umount)
+				desmontar $_INFOR_LOG $2 $3 ;;
+			-m | --mount)
+				montar $_INFOR_LOG $2 ;;
+			-a | --add)
+				adicionar $_INFOR_LOG $1 $2 $3 $4 $5 ;;
+			-r | --remove)
+				remover $_INFOR_LOG $2 $3 ;;
+			*)
+				commandNotFound;;
+		esac
+	else
+		commandNotFound
+	fi 
+else
+	echo "O programa encfs não está instalado."
+fi

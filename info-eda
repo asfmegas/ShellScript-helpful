@@ -1,0 +1,36 @@
+-------------------------------------------------------
+Encripta e Desencripta Arquivos
+Este script usa o programa encfs para criptografar os arquivos
+
+[[ Opções ]]
+
+-h --help    informções
+-l --list    listar as rotas criadas
+-a --add     adicionar rota à lista
+-r --remove  remover lista
+-m --mount   montar pasta
+-u --umount  desmontar pasta
+
+[[ Exemplos ]]
+
+$ eda --list --> lista as rotas criadas
+
+$ eda --list teste --> exibe a rota teste
+
+$ eda --add teste ~/Documentos/ ~/Montar/ --> cria uma rota teste 
+onde o diretório ~/Documentos/ ficará criptografado e o diretório 
+~/Montar/ será onde os dados serão montados.
+
+$ eda --mount teste -> monata a rota teste
+
+$ eda --umount teste -> desmonta a rota teste
+
+$ eda --add -h <nome_rota> <caminho1> <caminho2> --> Criar uma rota oculta
+
+$ eda --list -h --> --Visualizar rotas ocultas
+
+$ eda --list -h <nome_da_rota> --> --Visualizar rotas oculta <nome_da_rota>
+
+$ eda -r <nome_da_lista> --> Remover lista
+
+-------------------------------------------------------------

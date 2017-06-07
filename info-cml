@@ -1,0 +1,38 @@
+-------| script cml para arquivar informações de comandos de linha |-----------------------
+
+ [[ Command ]]
+	--create          criar as pastas cml_doc, cml_doc/command_line e cml_doc/posts
+	-i --info         ajuda
+	-n --new-command  criar novo comando
+	-l --list         listar comandos
+	-l -c             listar comandos com detalhes
+	-c --command      informações do comando: $ cml -c <command>
+	-cc               exibe apenas os comandos
+	-o --open         abrir comando com gedit: $ cml -o <command>
+	--gedit           abrir informações do comando com gedit: $ cml -o --gedit <command>
+	--vim             abrir informações do comando com vim: $ cml -o --vim <command>
+	-r                remover comando
+	--html -c         exibir em html pelo navegador	
+	
+	$ cml --html -c cml
+	
+ [[ Post ]]
+	-p --post         criar um post
+	-lp --list-posts  listar posts
+	-lpt              exibir post pelo terminal
+	-op --open-post   abrir posts: $ cml -lp <nome_post>
+	-sp --search-post busca por um post que possua a palavra especificada
+	-rn               renomear post: $ cml -rn <nome_arquivo> <novo_nome>
+	--html -p         exibir em html pelo navegador	
+
+	$ cml -r --post <nome-post> --> remove post
+
+ [[ Search ]]
+	cml [-s | --search] <palavra> --> pesquisa geral
+	cml [-s | --search] [-c | --command] --> pesquisa apenas em comandos
+	cml [-s | --serach] [-p | --post] --> pesquisa apenas em posts
+
+ [[ Alias ]]
+	alias cmll='cml --lista'
+	alias cmli='cml --info'
+-------------------------------------------------------------------------------------------

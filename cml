@@ -1,0 +1,256 @@
+#!/bin/bash
+# Descrição: cml - Ajuda para comandos Linux
+# Sinopse: cml [opções] [arquivo]
+# Ajuda: $ cml -i
+# Autor: Alexsandro Façanha <asfsteel2012@gmail.com> <asfmegas.github.io>
+# Versão: 1.0.1
+# Licença: Licence GPL
+# Dependencia: gedit
+
+# cml --html -c|-p cml
+
+commandNotFound(){
+	echo -e "\n\033[1;31;40m Command not found!\n"
+}
+
+getLista() {
+	if [ -d $2 ]; then
+		grep -R $1 $2* | cut -d'/' -f6 | cut -d':' -f1 | cut -d'.' -f1 | uniq | cat -n
+	else
+		echo -e "\n\033[1;31;40m Pasta não existe!\n Digite $ cml --create\n"
+	fi
+}
+
+getListHTML() {
+	arq=$1
+	if [ $3 == "Post" ]; then
+		arq=$(echo "post_$arq")
+	fi
+	if [ -f $HOME/cml_doc/$2/$arq.txt ] ; then
+		echo "<!doctype html>" > $HOME/pag_tmp.html
+		echo "<html>" >> $HOME/pag_tmp.html
+		echo "<head>" >> $HOME/pag_tmp.html
+		echo "<meta charset='utf-8' />" >> $HOME/pag_tmp.html
+		echo "<title>$3 $1</title>" >> $HOME/pag_tmp.html
+		echo "<link rel='stylesheet' href='$HOME/mybin/style-cml.css'>" >> $HOME/pag_tmp.html
+		echo "</head>" >> $HOME/pag_tmp.html
+		echo "<body>" >> $HOME/pag_tmp.html
+		echo "<div id='conteudo'>" >> $HOME/pag_tmp.html
+		echo "<pre>" >> $HOME/pag_tmp.html
+		while read linha; do 
+			echo "$linha" >> $HOME/pag_tmp.html
+		done < $HOME/cml_doc/$2/$arq.txt
+		echo "</pre>" >> $HOME/pag_tmp.html
+		echo "</div>" >> $HOME/pag_tmp.html
+		echo "</body>" >> $HOME/pag_tmp.html
+		echo "</html>">> $HOME/pag_tmp.html
+
+		opera $HOME/pag_tmp.html --type=renderer &>/dev/null &
+		exit 0
+	else
+		if [ $3 == "Post" ]; then
+			echo "Post não encontrado!!!!"
+		else
+			echo "Comando não encontrado!!!!"
+		fi
+	fi
+}
+
+if [ $# -eq 1 ] ; then
+	case $1 in
+		#Create folder
+		--create)
+			if ls $HOME/cml_doc &> /dev/null; then
+				if ls $HOME/cml_doc/command_line &> /dev/null; then
+					echo -e "\n Folders already created\n"
+				else
+					mkdir $HOME/cml_doc
+					mkdir $HOME/cml_doc/command_line
+					mkdir $HOME/cml_doc/posts
+				fi
+			else
+				mkdir $HOME/cml_doc; mkdir $HOME/cml_doc/command_line
+			fi ;;
+
+		#Information
+		-i | --info)
+			cat $HOME/mybin/info-cml | less ;;
+
+		#List commands
+		-l | --list)
+			ls $HOME/cml_doc/command_line | cut -d'.' -f1 | cat -n ;;
+		-ll)
+			ls $HOME/cml_doc/command_line | cut -d'.' -f1 | cat -n | less ;;
+		#List posts
+		-lp | --list-posts)
+			ls $HOME/cml_doc/posts | cut -d'_' -f2 | cut -d'.' -f1 | cat -n ;;
+		*)
+			commandNotFound ;;
+	esac
+
+elif [ $# -eq 2 ]; then
+	case $1 in
+		-c | --command)
+			if [ -f $HOME/cml_doc/command_line/$2.txt ] ; then
+				count=$(cat $HOME/cml_doc/command_line/$2.txt | wc -l)
+				if [ $count -le 30 ]; then
+					cat -n $HOME/cml_doc/command_line/$2.txt
+				else
+					cat -n $HOME/cml_doc/command_line/$2.txt | less
+				fi
+			else
+				commandNotFound
+			fi ;;
+		-cc)
+			if [ -f $HOME/cml_doc/command_line/$2.txt ] ; then
+				count=$(cat $HOME/cml_doc/command_line/$2.txt | grep "^$ " | wc -l)
+				if [ $count -le 30 ]; then
+					cat $HOME/cml_doc/command_line/$2.txt | grep "^$ "
+				else
+					cat $HOME/cml_doc/command_line/$2.txt | grep "^$ " | less
+				fi
+			else
+				echo -e "\n\033[0;37m The file \033[1;31;40m[[ $2 ]] \033[0;37mwas not found!"
+			fi;;
+		-n | --new-command)
+			if ls $HOME/cml_doc/command_line/$2.txt &> /dev/null ; then
+				echo -e "\n\033[1;37;00mO comando \033[1;31;40m[[ $2 ]] \033[1;37;00mjá está na lista.\n"
+			else
+				echo "###   Command [[ $2 ]]   ##################################################### $(date) " >> $HOME/cml_doc/command_line/$2.txt
+				gedit $HOME/cml_doc/command_line/$2.txt &
+			fi ;;
+		-p | --post)
+			if [ -f $HOME/cml_doc/posts/post_$2.txt ]; then
+				echo "O arquivo $2 já existe."
+			else
+				echo "### Post [[ $2 ]] ############################### $(date) " > $HOME/cml_doc/posts/post_$2.txt
+				gedit $HOME/cml_doc/posts/post_$2.txt &
+			fi ;;
+		-op | --open-post)
+			if [ -f $HOME/cml_doc/posts/`ls $HOME/cml_doc/posts/ | grep -i "$2"` ]; then
+				gedit $HOME/cml_doc/posts/`ls $HOME/cml_doc/posts/ | grep -i "$2"` &
+			else
+				echo -e "\nNenhum arquivo encontrado!\n"
+			fi;;
+		-o | --open-command)
+			if [ -f $HOME/cml_doc/command_line/$2.txt ] ; then
+				gedit $HOME/cml_doc/command_line/$2.txt &
+			else
+				commandNotFound
+			fi ;;
+		-r |  --remove-comammd)
+			if [ -f $HOME/cml_doc/command_line/$2.txt ] ; then
+				rm $HOME/cml_doc/command_line/$2.txt
+				echo -e "\n\033[00m Comando \033[1;31;40m [[ $2 ]] \033[00mapagado com sucesse!\n"
+			else
+				echo -e "\n\033[00m O comando\033[1;31;40m [[ $2 ]] \033[00mnão existe!\n"
+			fi ;;
+		-l)
+			case $2 in
+				-c)
+					for com in `ls $HOME/cml_doc/command_line | cut -d'.' -f1` ; do
+						echo $com:
+						cat $HOME/cml_doc/command_line/$com.txt | sed '1,2d; q'
+					done ;;
+				*)
+					commandNotFound ;;
+			esac ;;
+		-s | --search)
+			if [ -d $HOME/cml_doc/ ]; then
+				getLista $2 "$HOME/cml_doc/" 
+			else
+				echo "Não existe uma lista."
+			fi ;;
+		-sc | --search-command)
+			getLista $2 "$HOME/cml_doc/command_line/" ;;
+		-sp | --search-post)
+			getLista $2 "$HOME/cml_doc/posts/" ;;
+		-lpt)
+			files=$(ls $HOME/cml_doc/posts/ | grep -i "$2")
+			if [ -z $files &> /dev/null ]; then
+				echo -e "\nNenhum arquivo encontrado!\n"
+			else
+				for leia in $files; do
+					cat $HOME/cml_doc/posts/$leia >> $HOME/cml_doc/posts/lista.tmp
+				done
+				count=$(cat $HOME/cml_doc/posts/lista.tmp | wc -l)
+				if [ $count -gt 30 ]; then
+					cat $HOME/cml_doc/posts/lista.tmp | less
+					rm $HOME/cml_doc/posts/lista.tmp
+				else
+					cat $HOME/cml_doc/posts/lista.tmp
+					rm $HOME/cml_doc/posts/lista.tmp
+				fi
+			fi ;;
+		*)
+			commandNotFound ;;
+	esac
+elif [ $# -eq 3 ]; then
+	case $1 in
+		-o)
+			case $2 in
+				--gedit)
+					if [ -f $HOME/cml_doc/command_line/$3.txt ] ; then
+						gedit $HOME/cml_doc/command_line/$3.txt &
+					 else
+						commandNotFound
+					fi ;;
+				--vim)
+					if [ -f $HOME/cml_doc/command_line/$3.txt ] ; then
+						vim $HOME/cml_doc/command_line/$3.txt
+					else
+						commandNotFound
+					fi ;;
+				*)
+					commandNotFound ;;
+			esac ;;
+		-r)
+			case $2 in
+				--post)
+					if [ -f $HOME/cml_doc/posts/post_$3.txt ] ; then
+						rm $HOME/cml_doc/posts/post_$3.txt
+						echo -e "\n Post $3 apagado com sucesse!\n"
+					else
+						echo -e "\n\033[1;37;00mO post\033[1;31;40m [[ $3 ]] \033[1;37;00mnão existe!\n"
+					fi ;;
+				*)
+					commandNotFound;;
+			esac ;;
+		-s | --search)
+			case $2 in
+				-c | --command)
+					grep -R $3 $HOME/cml_doc/command_line/* | cut -d'/' -f6 | cut -d':' -f1 | cut -d'.' -f1 | uniq | cat -n ;;
+				-p | --post)
+					grep -R $3 $HOME/cml_doc/posts/* | cut -d'/' -f6 | cut -d':' -f1 | cut -d'_' -f2 | cut -d'.' -f1 | uniq | cat -n ;;
+				*)
+					commandNotFound;;
+			esac ;;
+		-rn)
+			if [ -f $HOME/cml_doc/posts/post_$2.txt ] ; then
+				cat $HOME/cml_doc/posts/post_$2.txt | sed '1d' > $HOME/cml_doc/posts/tmp.txt
+				echo "###   Command [[ $3 ]]   ##################################################### $(date) " > $HOME/cml_doc/posts/post_$2.txt
+				cat $HOME/cml_doc/posts/tmp.txt >> $HOME/cml_doc/posts/post_$2.txt
+				rm $HOME/cml_doc/posts/tmp.txt
+				mv $HOME/cml_doc/posts/post_$2.txt $HOME/cml_doc/posts/post_$3.txt
+			else
+				echo -e "\n\033[1;37;00mThe file\033[1;31;40m [[ $2 ]] \033[1;37;00mwas not found!\n"
+			fi ;;
+		--html)
+			case $2 in
+				-c)
+					getListHTML $3 command_line "Comando" ;;
+				-p)
+					getListHTML $3 posts "Post" ;;
+				*)
+					commandNotFound ;;
+			esac ;;
+		*)
+			commandNotFound ;;
+	esac
+fi
+
+
+
+
+
+
